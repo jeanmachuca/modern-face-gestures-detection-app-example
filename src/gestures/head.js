@@ -105,7 +105,7 @@ export class HeadGestureDetector {
 
     detectTilt(roll) {
         if (Math.abs(roll) > TILT_THRESHOLD) {
-            return roll > 0 ? 'Right' : 'Left';
+            return roll > 0 ? 'Left' : 'Right';
         }
         return null;
     }
