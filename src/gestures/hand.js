@@ -1,4 +1,4 @@
-import { FilesetResolver, GestureRecognizer } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs';
+import { FilesetResolver, GestureRecognizer } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/vision_bundle.mjs';
 
 export class HandGestureDetector {
     constructor() {
@@ -8,7 +8,7 @@ export class HandGestureDetector {
 
     async loadModels() {
         const vision = await FilesetResolver.forVisionTasks(
-            'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+            'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm'
         );
         this.recognizer = await GestureRecognizer.createFromOptions(vision, {
             baseOptions: {

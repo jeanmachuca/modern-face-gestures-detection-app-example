@@ -75,34 +75,35 @@ class App {
 
             promises.push(
                 this.expressionDetector.loadModels().then(() => {
-                    log(this.logContainer, 'Expression model loaded', 'success');
+                    log(this.logContainer, 'Expression model loaded (face-api.js)', 'success');
                 })
             );
 
             promises.push(
                 this.handDetector.loadModels().then(() => {
-                    log(this.logContainer, 'Hand gesture model loaded', 'success');
+                    log(this.logContainer, 'Hand gesture model loaded (MediaPipe)', 'success');
                 })
             );
 
             promises.push(
                 this.eyeTracker.loadModels().then(() => {
-                    log(this.logContainer, 'Eye tracker model loaded', 'success');
+                    log(this.logContainer, 'Eye tracker model loaded (MediaPipe)', 'success');
                 })
             );
 
             promises.push(
                 this.headDetector.loadModels().then(() => {
-                    log(this.logContainer, 'Head gesture model loaded', 'success');
+                    log(this.logContainer, 'Head gesture model loaded (MediaPipe)', 'success');
                 })
             );
 
             await Promise.all(promises);
             setModelStatus('Loaded');
-            log(this.logContainer, 'All models loaded successfully', 'success');
+            log(this.logContainer, 'All models loaded — start camera to begin detection', 'success');
         } catch (err) {
             setModelStatus('Error');
             log(this.logContainer, `Model loading failed: ${err.message}`, 'error');
+            console.error('Model loading error:', err);
         }
     }
 
@@ -120,7 +121,7 @@ class App {
                 this.running = true;
                 btn.textContent = 'Stop Camera';
                 setCameraStatus('Active');
-                log(this.logContainer, 'Camera started', 'success');
+                log(this.logContainer, 'Camera started — detection running', 'success');
                 this._loop();
             } catch (err) {
                 log(this.logContainer, err.message, 'error');
@@ -152,6 +153,11 @@ class App {
             return;
         }
 
+        if (this.video.readyState < 2) {
+            this.frameId = requestAnimationFrame(() => this._loop());
+            return;
+        }
+
         this._resizeOverlay();
 
         if (this.enabled.expression) {
@@ -161,9 +167,10 @@ class App {
                     const dominant = this.expressionDetector.getDominantExpression(expr);
                     updateExpressionPanel(dominant.name, dominant.confidence);
                 } else {
-                    updateExpressionPanel('—', 0);
+                    updateExpressionPanel('No face', 0);
                 }
             } catch (e) {
+                console.error('Expression detection error:', e);
                 updateExpressionPanel('Error', 0);
             }
         }
@@ -182,9 +189,10 @@ class App {
                         this.handCanvas.height
                     );
                 } else {
-                    updateHandPanel('—', 0);
+                    updateHandPanel('No hand', 0);
                 }
             } catch (e) {
+                console.error('Hand detection error:', e);
                 updateHandPanel('Error', 0);
             }
         }
@@ -199,9 +207,10 @@ class App {
                     this.lastBlinkState = eyeData.blinkScore > 0.7;
                     updateEyePanel(eyeData.gazeDirection, this.blinkCount);
                 } else {
-                    updateEyePanel('—', this.blinkCount);
+                    updateEyePanel('No face', this.blinkCount);
                 }
             } catch (e) {
+                console.error('Eye tracking error:', e);
                 updateEyePanel('Error', this.blinkCount);
             }
         }
@@ -227,6 +236,7 @@ class App {
                     updateHeadPanel(false, false, null);
                 }
             } catch (e) {
+                console.error('Head detection error:', e);
                 updateHeadPanel(false, false, null);
             }
         }

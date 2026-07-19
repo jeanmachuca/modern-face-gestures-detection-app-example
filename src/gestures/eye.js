@@ -1,4 +1,4 @@
-import { FilesetResolver, FaceLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs';
+import { FilesetResolver, FaceLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/vision_bundle.mjs';
 
 const LEFT_EYE_INDICES = [33, 160, 158, 133, 153, 144];
 const RIGHT_EYE_INDICES = [362, 385, 387, 263, 373, 380];
@@ -13,7 +13,7 @@ export class EyeTracker {
 
     async loadModels() {
         const vision = await FilesetResolver.forVisionTasks(
-            'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+            'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm'
         );
         this.faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
             baseOptions: {

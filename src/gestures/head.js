@@ -1,4 +1,4 @@
-import { FilesetResolver, FaceLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs';
+import { FilesetResolver, FaceLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/vision_bundle.mjs';
 
 const NOSE_TIP = 1;
 const LEFT_EAR = 234;
@@ -23,7 +23,7 @@ export class HeadGestureDetector {
 
     async loadModels() {
         const vision = await FilesetResolver.forVisionTasks(
-            'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+            'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm'
         );
         this.faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
             baseOptions: {
