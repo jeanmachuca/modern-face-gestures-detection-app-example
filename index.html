@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Face Gestures Detection App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <h1>Face Gestures Detection</h1>
+        <p class="subtitle">Real-time expression, hand, eye & head gesture recognition</p>
+    </header>
+
+    <div class="status-bar">
+        <span class="status-item" id="modelStatus">Models: Not loaded</span>
+        <span class="status-item" id="cameraStatus">Camera: Off</span>
+        <span class="status-item" id="fpsDisplay">FPS: 0</span>
+    </div>
+
+    <main class="main-container">
+        <div class="video-wrapper">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="overlay"></canvas>
+        </div>
+
+        <div class="gesture-panels">
+            <div class="gesture-card" id="expressionPanel">
+                <h3>Expressions</h3>
+                <div class="gesture-value" id="expressionName">—</div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="expressionBar" style="width:0%"></div>
+                </div>
+                <span class="confidence-label" id="expressionConfidence">0%</span>
+            </div>
+
+            <div class="gesture-card" id="handPanel">
+                <h3>Hand Gestures</h3>
+                <div class="gesture-value" id="handGestureName">—</div>
+                <canvas id="handCanvas" width="200" height="150"></canvas>
+                <span class="confidence-label" id="handScore">0%</span>
+            </div>
+
+            <div class="gesture-card" id="eyePanel">
+                <h3>Eye Tracking</h3>
+                <div class="gaze-arrow" id="gazeArrow">→</div>
+                <div class="gesture-value" id="gazeDirection">Center</div>
+                <div class="blink-counter">Blinks: <span id="blinkCount">0</span></div>
+            </div>
+
+            <div class="gesture-card" id="headPanel">
+                <h3>Head Gestures</h3>
+                <div class="gesture-value" id="headNod">Nod: —</div>
+                <div class="gesture-value" id="headShake">Shake: —</div>
+                <div class="gesture-value" id="headTilt">Tilt: —</div>
+                <div class="pose-indicator" id="poseIndicator">
+                    <div class="pose-dot" id="poseDot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn" class="btn-primary">Start Camera</button>
+            <div class="toggles">
+                <label class="toggle"><input type="checkbox" id="toggleExpression" checked> Expressions</label>
+                <label class="toggle"><input type="checkbox" id="toggleHand"> Hand Gestures</label>
+                <label class="toggle"><input type="checkbox" id="toggleEye"> Eye Tracking</label>
+                <label class="toggle"><input type="checkbox" id="toggleHead"> Head Gestures</label>
+            </div>
+        </div>
+
+        <div class="log-section">
+            <h3>Log</h3>
+            <div id="logContainer" class="log-container"></div>
+        </div>
+    </main>
+
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>

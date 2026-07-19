@@ -1,0 +1,12 @@
+{
+    "name": "modern-face-gestures-detection-app-example",
+    "version": "1.0.0",
+    "description": "Real-time face gestures detection: expressions, hand gestures, eye tracking, head gestures",
+    "private": true,
+    "scripts": {
+        "dev": "npx serve .",
+        "start": "npx serve ."
+    },
+    "keywords": ["face-detection", "gestures", "facial-expressions", "hand-tracking", "eye-tracking", "mediapipe", "tensorflowjs"],
+    "license": "MIT"
+}
