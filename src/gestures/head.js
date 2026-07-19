@@ -8,10 +8,10 @@ const CHIN = 152;
 const LEFT_EYE = 33;
 const RIGHT_EYE = 263;
 
-const HISTORY_SIZE = 30;
-const NOD_THRESHOLD = 8;
-const SHAKE_THRESHOLD = 8;
-const TILT_THRESHOLD = 10;
+const HISTORY_SIZE = 20;
+const NOD_THRESHOLD = 5;
+const SHAKE_THRESHOLD = 5;
+const TILT_THRESHOLD = 8;
 
 export class HeadGestureDetector {
     constructor() {
@@ -76,7 +76,7 @@ export class HeadGestureDetector {
         for (let i = 1; i < pitchHistory.length; i++) {
             if (
                 (pitchHistory[i - 1] - mean) * (pitchHistory[i] - mean) < 0 &&
-                Math.abs(pitchHistory[i] - pitchHistory[i - 1]) > 1
+                Math.abs(pitchHistory[i] - pitchHistory[i - 1]) > 0.5
             ) {
                 crossings++;
             }
@@ -94,7 +94,7 @@ export class HeadGestureDetector {
         for (let i = 1; i < yawHistory.length; i++) {
             if (
                 (yawHistory[i - 1] - mean) * (yawHistory[i] - mean) < 0 &&
-                Math.abs(yawHistory[i] - yawHistory[i - 1]) > 1
+                Math.abs(yawHistory[i] - yawHistory[i - 1]) > 0.5
             ) {
                 crossings++;
             }
@@ -105,7 +105,7 @@ export class HeadGestureDetector {
 
     detectTilt(roll) {
         if (Math.abs(roll) > TILT_THRESHOLD) {
-            return roll > 0 ? 'Right' : 'Left';
+            return roll > 0 ? 'Left' : 'Right';
         }
         return null;
     }
