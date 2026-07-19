@@ -245,11 +245,17 @@ class App {
     async _detectHead() {
         try {
             const headData = await this.headDetector.detect(this.video);
+            const poseDot = el('poseDot');
             if (headData) {
                 const nod = this.headDetector.detectNod(this.headDetector.pitchHistory);
                 const shake = this.headDetector.detectShake(this.headDetector.yawHistory);
                 const tilt = this.headDetector.detectTilt(headData.roll);
                 updateHeadPanel(nod, shake, tilt);
+
+                const dotX = 40 + (headData.yaw / 30) * 30;
+                const dotY = 40 + (headData.pitch / 30) * 30;
+                poseDot.style.left = `${dotX}px`;
+                poseDot.style.top = `${dotY}px`;
 
                 this.ctx.save();
                 this.ctx.fillStyle = '#3b82f6';
@@ -261,6 +267,8 @@ class App {
                 this.ctx.restore();
             } else {
                 updateHeadPanel(false, false, null);
+                poseDot.style.left = '40px';
+                poseDot.style.top = '40px';
             }
         } catch (e) {
             console.error('Head detection error:', e);
