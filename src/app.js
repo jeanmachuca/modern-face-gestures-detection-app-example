@@ -32,7 +32,8 @@ class App {
         this.headDetector = new HeadGestureDetector();
 
         this.running = false;
-        this.frameId = null;
+        this.processing = false;
+        this.intervalId = null;
         this.blinkCount = 0;
         this.lastBlinkState = false;
         this.fps = 0;
@@ -122,7 +123,7 @@ class App {
                 btn.textContent = 'Stop Camera';
                 setCameraStatus('Active');
                 log(this.logContainer, 'Camera started — detection running', 'success');
-                this._loop();
+                this._startLoop();
             } catch (err) {
                 log(this.logContainer, err.message, 'error');
             } finally {
@@ -133,9 +134,9 @@ class App {
 
     _stop() {
         this.running = false;
-        if (this.frameId) {
-            cancelAnimationFrame(this.frameId);
-            this.frameId = null;
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
         }
         this.camera.stop();
         this.ctx.clearRect(0, 0, this.overlay.width, this.overlay.height);
@@ -148,101 +149,123 @@ class App {
         this.overlay.height = this.video.videoHeight || 720;
     }
 
-    async _loop() {
-        if (!this.running) {
+    _startLoop() {
+        this.intervalId = setInterval(() => this._tick(), 150);
+        this._tick();
+    }
+
+    async _tick() {
+        if (!this.running || this.processing) {
             return;
         }
 
         if (this.video.readyState < 2) {
-            this.frameId = requestAnimationFrame(() => this._loop());
             return;
         }
 
+        this.processing = true;
         this._resizeOverlay();
 
-        if (this.enabled.expression) {
-            try {
-                const expr = await this.expressionDetector.detect(this.video);
-                if (expr) {
-                    const dominant = this.expressionDetector.getDominantExpression(expr);
-                    updateExpressionPanel(dominant.name, dominant.confidence);
-                } else {
-                    updateExpressionPanel('No face', 0);
-                }
-            } catch (e) {
-                console.error('Expression detection error:', e);
-                updateExpressionPanel('Error', 0);
+        try {
+            if (this.enabled.expression) {
+                await this._detectExpression();
             }
+            if (this.enabled.hand) {
+                await this._detectHand();
+            }
+            if (this.enabled.eye) {
+                await this._detectEye();
+            }
+            if (this.enabled.head) {
+                await this._detectHead();
+            }
+        } catch (e) {
+            console.error('Detection loop error:', e);
         }
 
-        if (this.enabled.hand) {
-            try {
-                const hands = await this.handDetector.detect(this.video);
-                this.handCtx.clearRect(0, 0, this.handCanvas.width, this.handCanvas.height);
-                if (hands.length > 0) {
-                    const top = hands[0];
-                    updateHandPanel(top.gesture, top.score);
-                    this.handDetector.drawHandSkeleton(
-                        this.handCtx,
-                        top.landmarks,
-                        this.handCanvas.width,
-                        this.handCanvas.height
-                    );
-                } else {
-                    updateHandPanel('No hand', 0);
-                }
-            } catch (e) {
-                console.error('Hand detection error:', e);
-                updateHandPanel('Error', 0);
+        this.processing = false;
+        this._updateFPS();
+    }
+
+    async _detectExpression() {
+        try {
+            const expr = await this.expressionDetector.detect(this.video);
+            if (expr) {
+                const dominant = this.expressionDetector.getDominantExpression(expr);
+                updateExpressionPanel(dominant.name, dominant.confidence);
+            } else {
+                updateExpressionPanel('No face', 0);
             }
+        } catch (e) {
+            console.error('Expression detection error:', e);
+            updateExpressionPanel('Error', 0);
         }
+    }
 
-        if (this.enabled.eye) {
-            try {
-                const eyeData = await this.eyeTracker.detect(this.video);
-                if (eyeData) {
-                    if (eyeData.blinkScore > 0.7 && !this.lastBlinkState) {
-                        this.blinkCount++;
-                    }
-                    this.lastBlinkState = eyeData.blinkScore > 0.7;
-                    updateEyePanel(eyeData.gazeDirection, this.blinkCount);
-                } else {
-                    updateEyePanel('No face', this.blinkCount);
-                }
-            } catch (e) {
-                console.error('Eye tracking error:', e);
-                updateEyePanel('Error', this.blinkCount);
+    async _detectHand() {
+        try {
+            const hands = await this.handDetector.detect(this.video);
+            this.handCtx.clearRect(0, 0, this.handCanvas.width, this.handCanvas.height);
+            if (hands.length > 0) {
+                const top = hands[0];
+                updateHandPanel(top.gesture, top.score);
+                this.handDetector.drawHandSkeleton(
+                    this.handCtx,
+                    top.landmarks,
+                    this.handCanvas.width,
+                    this.handCanvas.height
+                );
+            } else {
+                updateHandPanel('No hand', 0);
             }
+        } catch (e) {
+            console.error('Hand detection error:', e);
+            updateHandPanel('Error', 0);
         }
+    }
 
-        if (this.enabled.head) {
-            try {
-                const headData = await this.headDetector.detect(this.video);
-                if (headData) {
-                    const nod = this.headDetector.detectNod(this.headDetector.pitchHistory);
-                    const shake = this.headDetector.detectShake(this.headDetector.yawHistory);
-                    const tilt = this.headDetector.detectTilt(headData.roll);
-                    updateHeadPanel(nod, shake, tilt);
-
-                    this.ctx.save();
-                    this.ctx.fillStyle = '#3b82f6';
-                    const cx = this.overlay.width / 2;
-                    const cy = this.overlay.height / 4;
-                    this.ctx.beginPath();
-                    this.ctx.arc(cx + headData.yaw * 2, cy + headData.pitch * 2, 4, 0, 2 * Math.PI);
-                    this.ctx.fill();
-                    this.ctx.restore();
-                } else {
-                    updateHeadPanel(false, false, null);
+    async _detectEye() {
+        try {
+            const eyeData = await this.eyeTracker.detect(this.video);
+            if (eyeData) {
+                if (eyeData.blinkScore > 0.7 && !this.lastBlinkState) {
+                    this.blinkCount++;
                 }
-            } catch (e) {
-                console.error('Head detection error:', e);
+                this.lastBlinkState = eyeData.blinkScore > 0.7;
+                updateEyePanel(eyeData.gazeDirection, this.blinkCount);
+            } else {
+                updateEyePanel('No face', this.blinkCount);
+            }
+        } catch (e) {
+            console.error('Eye tracking error:', e);
+            updateEyePanel('Error', this.blinkCount);
+        }
+    }
+
+    async _detectHead() {
+        try {
+            const headData = await this.headDetector.detect(this.video);
+            if (headData) {
+                const nod = this.headDetector.detectNod(this.headDetector.pitchHistory);
+                const shake = this.headDetector.detectShake(this.headDetector.yawHistory);
+                const tilt = this.headDetector.detectTilt(headData.roll);
+                updateHeadPanel(nod, shake, tilt);
+
+                this.ctx.save();
+                this.ctx.fillStyle = '#3b82f6';
+                const cx = this.overlay.width / 2;
+                const cy = this.overlay.height / 4;
+                this.ctx.beginPath();
+                this.ctx.arc(cx + headData.yaw * 2, cy + headData.pitch * 2, 4, 0, 2 * Math.PI);
+                this.ctx.fill();
+                this.ctx.restore();
+            } else {
                 updateHeadPanel(false, false, null);
             }
+        } catch (e) {
+            console.error('Head detection error:', e);
+            updateHeadPanel(false, false, null);
         }
-
-        this._updateFPS();
-        this.frameId = requestAnimationFrame(() => this._loop());
     }
 
     _updateFPS() {
